@@ -1,8 +1,6 @@
 import crypto from 'node:crypto';
 
-// Vercel parses the body automatically by content-type, which would break
-// Slack's signature check (it's computed over the exact raw bytes).
-export const config = { api: { bodyParser: false } };
+export const config = { api: { bodyParser: false } }; // Disable bodyParser for Slack signature verification
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -19,8 +17,9 @@ export default async function handler(req, res) {
     return;
   }
 
-  const body = JSON.parse(rawBody);
+  const body = JSON.parse(rawBody); // extract the JSON body after signature verification
 
+  // Initial URL verification from Slack
   if (body.type === 'url_verification') {
     res.status(200).json({ challenge: body.challenge });
     return;
@@ -31,8 +30,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  // Slack retries delivery on slow/failed responses; the first attempt
-  // already committed (or is committing), so retries are just ignored.
+  // Slack retries delivery on slow/failed responses; the first attempt already committed (or is committing), so retries are just ignored.
   if (req.headers['x-slack-retry-num']) {
     res.status(200).send('ok');
     return;
@@ -160,8 +158,7 @@ async function addReaction(channel, timestamp) {
 
 // Inserts a diary paragraph into the README.
 // - Existing `## {dateStr}` heading -> append the paragraph under it.
-// - New date -> insert a new heading right before the first existing
-//   heading, so the newest date always ends up at the top.
+// - New date -> insert a new heading right before the first existing heading.
 export function mergeEntry(content, dateStr, text) {
   const lines = content.split('\n');
   const headingIndices = [];
